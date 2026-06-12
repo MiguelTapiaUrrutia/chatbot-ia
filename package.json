@@ -1,0 +1,25 @@
+{
+  "name": "chatbot-ia",
+  "version": "0.1.0",
+  "description": "Chatbot con IA: backend Express como intermediario seguro hacia una API de IA, con frontend de chat estático",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "chatbot",
+    "ia",
+    "express"
+  ],
+  "author": "Miguel",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
