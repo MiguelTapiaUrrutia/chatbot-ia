@@ -1,0 +1,264 @@
+/* ===== Tokens ===== */
+:root {
+  --color-papel: #f3ecdd;
+  --color-crema: #fffaf0;
+  --color-teal: #9fd8d3;
+  --color-naranja: #ffb066;
+  --color-error: #ffd9cc;
+  --color-texto: #2b2d31;
+  --color-borde: #1a1b1e;
+
+  --grosor-borde: 3px;
+  --radio: 4px;
+  --sombra-dura: 5px 5px 0 var(--color-borde);
+  --sombra-presionada: 2px 2px 0 var(--color-borde);
+
+  --espacio: 1rem;
+  --fuente:
+    'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* ===== Base ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--fuente);
+  color: var(--color-texto);
+  background-color: var(--color-papel);
+}
+
+:focus-visible {
+  outline: var(--grosor-borde) solid var(--color-borde);
+  outline-offset: 2px;
+}
+
+.visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ===== Cabecera ===== */
+.cabecera {
+  padding: var(--espacio);
+  background-color: var(--color-crema);
+  border-bottom: var(--grosor-borde) solid var(--color-borde);
+  box-shadow: 0 4px 0 var(--color-borde);
+}
+
+.cabecera__titulo {
+  margin: 0;
+  font-size: clamp(1.6rem, 1rem + 3.5vw, 2.75rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.cabecera__subtitulo {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* ===== Contenedor del chat ===== */
+.chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: var(--espacio);
+  gap: var(--espacio);
+}
+
+/* ===== Hilo de mensajes ===== */
+.hilo {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio);
+  overflow-y: auto;
+}
+
+.burbuja {
+  max-width: 85%;
+  padding: 0.75rem 1rem;
+  border: var(--grosor-borde) solid var(--color-borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-dura);
+}
+
+.burbuja__autor {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.burbuja__texto {
+  margin: 0;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.burbuja--user {
+  align-self: flex-end;
+  background-color: var(--color-teal);
+}
+
+.burbuja--assistant {
+  align-self: flex-start;
+  background-color: var(--color-crema);
+}
+
+/* ===== Indicador "escribiendo..." ===== */
+.burbuja--escribiendo .burbuja__texto {
+  font-style: italic;
+  font-weight: 600;
+}
+
+.puntos span {
+  display: inline-block;
+  animation: parpadeo 1.2s infinite;
+}
+
+.puntos span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.puntos span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes parpadeo {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ===== Burbuja de error ===== */
+.burbuja--error {
+  align-self: flex-start;
+  background-color: var(--color-error);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.burbuja__icono {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.burbuja--error .burbuja__texto {
+  flex: 1;
+  font-weight: 600;
+}
+
+.burbuja__reintentar {
+  padding: 0.4rem 0.9rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-texto);
+  background-color: var(--color-crema);
+  border: var(--grosor-borde) solid var(--color-borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-dura);
+  cursor: pointer;
+}
+
+.burbuja__reintentar:active {
+  transform: translate(3px, 3px);
+  box-shadow: var(--sombra-presionada);
+}
+
+/* ===== Formulario ===== */
+.formulario {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+.formulario__entrada {
+  flex: 1;
+  min-height: 3rem;
+  padding: 0.7rem 0.9rem;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-texto);
+  background-color: var(--color-crema);
+  border: var(--grosor-borde) solid var(--color-borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-dura);
+  resize: none;
+}
+
+.formulario__boton {
+  padding: 0.7rem 1.3rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-texto);
+  background-color: var(--color-naranja);
+  border: var(--grosor-borde) solid var(--color-borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-dura);
+  cursor: pointer;
+}
+
+.formulario__boton:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: var(--sombra-presionada);
+}
+
+.formulario__boton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ===== Desktop: chat centrado con ancho de lectura ===== */
+@media (min-width: 768px) {
+  .cabecera {
+    text-align: center;
+  }
+
+  .chat {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: calc(var(--espacio) * 1.5);
+  }
+}
+
+/* ===== Movimiento reducido ===== */
+@media (prefers-reduced-motion: reduce) {
+  .puntos span {
+    animation: none;
+  }
+}

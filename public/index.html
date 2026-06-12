@@ -3,10 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chatbot IA</title>
+  <title>Chatbot del Portafolio</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script type="module" src="js/chat.js"></script>
 </head>
 <body>
-  <h1>Chatbot IA</h1>
-  <p>Próximamente</p>
+  <header class="cabecera">
+    <h1 class="cabecera__titulo">Chatbot del Portafolio</h1>
+    <p class="cabecera__subtitulo">Pregúntame por los proyectos de Migue</p>
+  </header>
+
+  <main class="chat">
+    <ul
+      id="hilo"
+      class="hilo"
+      role="log"
+      aria-live="polite"
+      aria-label="Conversación con el asistente"
+    ></ul>
+
+    <form id="formulario" class="formulario">
+      <label for="entrada" class="visualmente-oculto">Escribe tu mensaje</label>
+      <textarea
+        id="entrada"
+        class="formulario__entrada"
+        rows="1"
+        maxlength="2000"
+        placeholder="Escribe tu mensaje…"
+        autocomplete="off"
+        required
+      ></textarea>
+      <button type="submit" id="boton-enviar" class="formulario__boton">
+        Enviar
+      </button>
+    </form>
+  </main>
 </body>
 </html>
