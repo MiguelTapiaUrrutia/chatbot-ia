@@ -1,0 +1,12 @@
+# Caddyfile de producción para chat.notbot.pro
+#
+# En el servidor este archivo vive en: /etc/caddy/Caddyfile
+# Tras editarlo, recargar con: sudo systemctl reload caddy
+#
+# Caddy se encarga solo de emitir y renovar el certificado TLS (Let's Encrypt)
+# y de redirigir HTTP → HTTPS. Solo hace falta que el DNS de chat.notbot.pro
+# apunte a la IP del VPS y que los puertos 80 y 443 estén abiertos.
+
+chat.notbot.pro {
+	reverse_proxy localhost:3000
+}
