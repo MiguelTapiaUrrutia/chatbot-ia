@@ -3,6 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
 import { consultarIA, CODIGOS_ERROR_IA, ErrorProveedorIA } from './proveedor-ia.js';
+import { necesitaGroundingF1 } from './js/grounding.js';
+import { obtenerStandingsActuales, obtenerStandingsConstructores } from './js/f1-datos.js';
 
 // En ES Modules no existe __dirname; se reconstruye a partir de import.meta.url
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,8 +36,65 @@ const MENSAJE_SYSTEM = {
     'y 8) este mismo chatbot: full stack con Node y Express, desplegado en un VPS propio. ' +
     'Puedes describir cualquiera de ellos brevemente si te preguntan. ' +
     'Si te preguntan algo fuera del portafolio y la programación, respondes breve ' +
-    'y rediriges la conversación con simpatía hacia los proyectos de Migue.',
+    'y rediriges la conversación con simpatía hacia los proyectos de Migue. ' +
+    // Reglas de grounding F1: el servidor a veces inyecta un mensaje system con
+    // los datos reales del campeonato actual. El modelo NO debe inventar nunca.
+    'Para preguntas sobre el campeonato de Fórmula 1 ACTUAL (líder, clasificación, ' +
+    'puntos, posiciones), usa EXCLUSIVAMENTE los datos que te lleguen en un mensaje ' +
+    'que empiece por "Datos actuales del campeonato F1". Si ese mensaje no aparece, ' +
+    'di con naturalidad que ahora mismo no tienes el dato actualizado del campeonato. ' +
+    'NUNCA inventes posiciones, puntos ni nombres de pilotos o escuderías.',
 };
+
+// Texto que precede a los datos inyectados. Debe coincidir con lo que el system
+// prompt le pide al modelo reconocer.
+const PREFIJO_GROUNDING = 'Datos actuales del campeonato F1';
+
+/**
+ * Construye el mensaje system con los standings reales, ya formateado para el
+ * modelo. Devuelve null si no hay ningún dato (degradación elegante: el chat
+ * sigue sin el bloque de grounding).
+ * @param {Array<{ posicion: number, nombre: string, equipo: string, puntos: number }> | null} pilotos
+ * @param {Array<{ posicion: number, equipo: string, puntos: number }> | null} constructores
+ * @returns {{ role: 'system', content: string } | null}
+ */
+function construirMensajeGrounding(pilotos, constructores) {
+  if (!pilotos && !constructores) {
+    return null;
+  }
+
+  const fecha = new Date().toISOString().slice(0, 10);
+  const partes = [`${PREFIJO_GROUNDING} (${fecha}):`];
+
+  if (pilotos) {
+    const lineas = pilotos.map(
+      (p) => `  ${p.posicion}. ${p.nombre} (${p.equipo}) — ${p.puntos} pts`,
+    );
+    partes.push('Clasificación de pilotos (top 10):', ...lineas);
+  }
+  if (constructores) {
+    const lineas = constructores.map(
+      (c) => `  ${c.posicion}. ${c.equipo} — ${c.puntos} pts`,
+    );
+    partes.push('Clasificación de constructores (top 10):', ...lineas);
+  }
+
+  return { role: 'system', content: partes.join('\n') };
+}
+
+/**
+ * Devuelve el contenido del último mensaje del usuario, o '' si no hay ninguno.
+ * @param {Array<{ role: string, content: string }>} mensajes
+ * @returns {string}
+ */
+function ultimoMensajeUsuario(mensajes) {
+  for (let i = mensajes.length - 1; i >= 0; i--) {
+    if (mensajes[i].role === 'user') {
+      return mensajes[i].content;
+    }
+  }
+  return '';
+}
 
 // Traducción de códigos de dominio del proveedor a estados HTTP.
 // 502 (Bad Gateway): nuestro servidor está bien, el de más arriba falló.
@@ -102,9 +161,30 @@ app.post('/api/chat', async (req, res) => {
   }
 
   try {
+    // Grounding F1: si la última pregunta es sobre el campeonato actual,
+    // consultamos Jolpica e inyectamos los datos como un system extra ANTES de
+    // llamar a la IA. Si Jolpica falla, el mensaje es null y seguimos sin él.
+    const mensajesGrounding = [];
+    if (necesitaGroundingF1(ultimoMensajeUsuario(req.body.mensajes))) {
+      const [pilotos, constructores] = await Promise.all([
+        obtenerStandingsActuales(),
+        obtenerStandingsConstructores(),
+      ]);
+      const bloque = construirMensajeGrounding(pilotos, constructores);
+      if (bloque) {
+        mensajesGrounding.push(bloque);
+      }
+      console.log(`[/api/chat] grounding F1 solicitado, datos=${bloque ? 'sí' : 'no'}`);
+    }
+
     // El system va siempre primero y lo pone el servidor, nunca el cliente:
     // así nadie puede redefinir la personalidad del bot desde fuera.
-    const texto = await consultarIA([MENSAJE_SYSTEM, ...req.body.mensajes]);
+    // Los datos de grounding (si los hay) van detrás del system base.
+    const texto = await consultarIA([
+      MENSAJE_SYSTEM,
+      ...mensajesGrounding,
+      ...req.body.mensajes,
+    ]);
     return res.json({ respuesta: texto });
   } catch (error) {
     if (error instanceof ErrorProveedorIA) {
